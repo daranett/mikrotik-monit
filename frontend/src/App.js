@@ -117,9 +117,30 @@ const MikroTikDashboard = () => {
 
   useEffect(() => {
     fetchRouterData();
-    const interval = setInterval(fetchRouterData, 10000);
+    const interval = setInterval(fetchRouterData, 5000);
     return () => clearInterval(interval);
   }, []);
+
+// Tambahkan fetch bandwidth terpisah untuk update realtime
+useEffect(() => {
+  if (!selectedRouter) return;
+  
+  const fetchBandwidth = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/routers/${selectedRouter.id}/bandwidth`);
+      if (res.ok) {
+        const data = await res.json();
+        setBandwidthData(data);
+      }
+    } catch (err) {
+      console.error('Error fetching bandwidth:', err);
+    }
+  };
+  
+  fetchBandwidth();
+  const interval = setInterval(fetchBandwidth, 3000); // Update every 3 seconds
+  return () => clearInterval(interval);
+}, [selectedRouter]);
 
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4'];
 
