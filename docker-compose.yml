@@ -17,7 +17,7 @@ services:
       - my-net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.mikrotik-api.rule=Host(`mikrotik.access.daranett.com`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.mikrotik-api.rule=Host(`yourdomain`) && PathPrefix(`/api`)"
       - "traefik.http.routers.mikrotik-api.entrypoints=websecure"
       - "traefik.http.routers.mikrotik-api.tls=true"
       - "traefik.http.routers.mikrotik-api.tls.certresolver=cloudflare"
@@ -37,11 +37,11 @@ services:
     labels:
       - "traefik.enable=true"
       # HTTP router - redirect ke HTTPS
-      - "traefik.http.routers.mikrotik-frontend-http.rule=Host(`mikrotik.access.daranett.com`)"
+      - "traefik.http.routers.mikrotik-frontend-http.rule=Host(`yourdomain`)"
       - "traefik.http.routers.mikrotik-frontend-http.entrypoints=web"
       - "traefik.http.routers.mikrotik-frontend-http.middlewares=redirect-to-https@docker"
       # HTTPS router
-      - "traefik.http.routers.mikrotik-frontend.rule=Host(`mikrotik.access.daranett.com`)"
+      - "traefik.http.routers.mikrotik-frontend.rule=Host(`yourdomain`)"
       - "traefik.http.routers.mikrotik-frontend.entrypoints=websecure"
       - "traefik.http.routers.mikrotik-frontend.tls=true"
       - "traefik.http.routers.mikrotik-frontend.tls.certresolver=cloudflare"
