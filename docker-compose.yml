@@ -1,0 +1,68 @@
+services:
+  # Backend API Service
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mikrotik-api
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./config:/app/config
+    restart: unless-stopped
+    networks:
+      - my-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mikrotik-api.rule=Host(`mikrotik.access.daranett.com`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.mikrotik-api.entrypoints=websecure"
+      - "traefik.http.routers.mikrotik-api.tls=true"
+      - "traefik.http.routers.mikrotik-api.tls.certresolver=cloudflare"
+      - "traefik.http.services.mikrotik-api.loadbalancer.server.port=3001"
+
+  # Frontend Dashboard
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mikrotik-dashboard
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - my-net
+    labels:
+      - "traefik.enable=true"
+      # HTTP router - redirect ke HTTPS
+      - "traefik.http.routers.mikrotik-frontend-http.rule=Host(`mikrotik.access.daranett.com`)"
+      - "traefik.http.routers.mikrotik-frontend-http.entrypoints=web"
+      - "traefik.http.routers.mikrotik-frontend-http.middlewares=redirect-to-https@docker"
+      # HTTPS router
+      - "traefik.http.routers.mikrotik-frontend.rule=Host(`mikrotik.access.daranett.com`)"
+      - "traefik.http.routers.mikrotik-frontend.entrypoints=websecure"
+      - "traefik.http.routers.mikrotik-frontend.tls=true"
+      - "traefik.http.routers.mikrotik-frontend.tls.certresolver=cloudflare"
+      # Definisi middleware redirect
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+      - "traefik.http.services.mikrotik-frontend.loadbalancer.server.port=80"
+
+  # Redis for caching
+  redis:
+    image: redis:alpine
+    container_name: mikrotik-redis
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - my-net
+
+networks:
+  my-net:
+    external: true
+
+volumes:
+  redis-data:
